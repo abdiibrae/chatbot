@@ -1,18 +1,19 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const fs = require('fs');
 require('dotenv').config();
 
-// Initialize the client with LocalAuth to save the session data
+// Ensure the LocalAuth path exists
+const authPath = process.env.LOCAL_AUTH_PATH || './.wwebjs_auth';
+if (!fs.existsSync(authPath)) {
+    fs.mkdirSync(authPath, { recursive: true });
+}
+
 const client = new Client({
-    authStrategy: new LocalAuth({ dataPath: process.env.LOCAL_AUTH_PATH || './.wwebjs_auth' }),
-    puppeteer: {
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],  // Recommended for cloud deployment
-    },
+    authStrategy: new LocalAuth({ dataPath: authPath }),
 });
 
 client.on('qr', qr => {
-    // Generate and display the QR code in the terminal
     qrcode.generate(qr, { small: true });
 });
 
@@ -21,17 +22,12 @@ client.on('ready', () => {
 });
 
 client.on('message_create', message => {
-    console.log(message.body); // Logs incoming messages
-
-    if (message.isGroupMsg) {
-        return; // Prevent replies in group messages
-    }
-
+    if (message.isGroupMsg) return;
     if (!message.fromMe) {
         if (message.body.toLowerCase().startsWith('h')) {
             client.sendMessage(message.from, "Don't hi me, please speak.");
         } else {
-            client.sendMessage(message.from, "Hello! You have reached Breezy. I'm his assistant bot. Kindly leave a message, and don't say hi.");
+            client.sendMessage(message.from, 'Hello! You have reached Breezy. I\'m his assistant bot. Kindly leave a message, and don\'t say hi.');
         }
     }
 });
