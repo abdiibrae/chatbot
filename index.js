@@ -18,8 +18,10 @@ client.on('ready', () => {
 
 client.on('message_create', message => {
     console.log(message.body);
-
-    if (!message.fromMe) {
+    if (message.isGroupMsg){
+        return;
+    }
+     if (!message.fromMe) {
         if (message.body.toLowerCase().startsWith('h')) {
             client.sendMessage(message.from, "Don't hi me, please speak.");
         } else {
