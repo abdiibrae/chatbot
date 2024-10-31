@@ -1,10 +1,14 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 require('dotenv').config();
+
 // Initialize the client with LocalAuth to save the session data
 const client = new Client({
-    authStrategy: new LocalAuth(),
-    dataPath: process.env.LOCAL_AUTH_PATH || './.wwebjs_auth'
+    authStrategy: new LocalAuth({ dataPath: process.env.LOCAL_AUTH_PATH || './.wwebjs_auth' }),
+    puppeteer: {
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],  // Recommended for cloud deployment
+    },
 });
 
 client.on('qr', qr => {
@@ -17,15 +21,17 @@ client.on('ready', () => {
 });
 
 client.on('message_create', message => {
-    console.log(message.body);
-    if (message.isGroupMsg){
-        return;
+    console.log(message.body); // Logs incoming messages
+
+    if (message.isGroupMsg) {
+        return; // Prevent replies in group messages
     }
-     if (!message.fromMe) {
+
+    if (!message.fromMe) {
         if (message.body.toLowerCase().startsWith('h')) {
             client.sendMessage(message.from, "Don't hi me, please speak.");
         } else {
-            client.sendMessage(message.from, 'Hello! You have reached Breezy. I\'m his assistant bot. Kindly leave a message, and don\'t say hi.');
+            client.sendMessage(message.from, "Hello! You have reached Breezy. I'm his assistant bot. Kindly leave a message, and don't say hi.");
         }
     }
 });
